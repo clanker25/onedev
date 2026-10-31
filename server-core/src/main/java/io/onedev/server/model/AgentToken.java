@@ -1,0 +1,37 @@
+package io.onedev.server.model;
+
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
+import java.io.Serial;
+import java.util.UUID;
+
+import static io.onedev.server.model.AgentToken.PROP_VALUE;
+
+@Entity
+@Table(indexes={@Index(columnList=PROP_VALUE)})
+@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
+public class AgentToken extends AbstractEntity {
+	
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	public static final String PROP_VALUE = "value";
+	
+	@Column(nullable=false, unique=true)
+	private String value = UUID.randomUUID().toString();
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+	
+}

