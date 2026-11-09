@@ -1,0 +1,91 @@
+package io.onedev.server.web.page.help;
+
+import java.lang.reflect.Method;
+import java.util.List;
+
+import jakarta.ws.rs.Path;
+
+import org.apache.wicket.Component;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+
+import io.onedev.server.exception.NotFoundException;
+import io.onedev.server.web.component.link.ViewStateAwarePageLink;
+
+public class ResourceDetailPage extends ApiHelpPage {
+
+	private static final String PARAM_RESOURCE = "resource";
+	
+	private final Class<?> resourceClass;
+	
+	public ResourceDetailPage(PageParameters params) {
+		super(params);
+		var className = params.get(PARAM_RESOURCE).toString();
+		try {
+			resourceClass = Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			throw new NotFoundException("Resource class not found: " + className);
+		}
+	}
+
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
+		
+		add(new Label("title", getResourceTitle(resourceClass)));
+		
+		String description = getResourceDescription(resourceClass);
+		add(new Label("description", description).setEscapeModelStrings(false).setVisible(description!=null));
+		
+		add(new ListView<Method>("methods", new LoadableDetachableModel<List<Method>>() {
+
+			@Override
+			protected List<Method> load() {
+				return ApiHelpUtils.getResourceMethods(resourceClass);
+			}
+			
+		}) {
+
+			@Override
+			protected void populateItem(ListItem<Method> item) {
+				Method method = item.getModelObject();
+				
+				Link<Void> link = new ViewStateAwarePageLink<Void>("link", MethodDetailPage.class, 
+						MethodDetailPage.paramsOf(resourceClass, method.getName()));
+				link.add(new Label("label", getMethodTitle(method)));
+				
+				item.add(link);
+				
+				item.add(new Label("httpMethod", getHttpMethod(method)));
+
+				String resourcePathValue = resourceClass.getAnnotation(Path.class).value();
+				Path methodPath = method.getAnnotation(Path.class);
+				if (methodPath != null)
+					item.add(new Label("path", resourcePathValue + methodPath.value()));
+				else
+					item.add(new Label("path", resourcePathValue));
+			}
+			
+		});
+	}
+
+	@Override
+	protected Component newTopbarTitle(String componentId) {
+		Fragment fragment = new Fragment(componentId, "topbarTitleFrag", this);
+		fragment.add(new ViewStateAwarePageLink<Void>("resources", ResourceListPage.class));
+		fragment.add(new Label("resource", getResourceTitle(resourceClass)));
+		return fragment;
+	}
+
+	public static PageParameters paramsOf(Class<?> resourceClass) {
+		PageParameters params = new PageParameters();
+		params.add(PARAM_RESOURCE, resourceClass.getName());
+		return params;
+	}
+
+}

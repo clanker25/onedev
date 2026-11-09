@@ -1,0 +1,43 @@
+package io.onedev.server.search.entity.pullrequest;
+
+import java.io.Serial;
+
+import org.jspecify.annotations.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.PullRequest;
+import io.onedev.server.model.support.pullrequest.MergePreview;
+import io.onedev.server.util.ProjectScope;
+import io.onedev.server.util.QueryUtils;
+import io.onedev.server.util.criteria.Criteria;
+
+public class HasMergeConflictsCriteria extends Criteria<PullRequest> {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<PullRequest, PullRequest> from, CriteriaBuilder builder) {
+		Path<?> requestHead = QueryUtils.getPath(from, PullRequest.PROP_MERGE_PREVIEW + "." + MergePreview.PROP_HEAD_COMMIT_HASH);
+		Path<?> merged = QueryUtils.getPath(from, PullRequest.PROP_MERGE_PREVIEW + "." + MergePreview.PROP_MERGED_COMMIT_HASH);
+		return builder.and(
+				builder.isNotNull(requestHead), 
+				builder.isNull(merged));
+	}
+
+	@Override
+	public boolean matches(PullRequest request) {
+		MergePreview preview = request.getMergePreview();
+		return preview != null && preview.getMergeCommitHash() == null;
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return PullRequestQuery.getRuleName(PullRequestQueryLexer.HasMergeConflicts);
+	}
+
+}

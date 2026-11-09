@@ -1,0 +1,41 @@
+package io.onedev.server.search.entity.build;
+
+import java.io.Serial;
+
+import org.jspecify.annotations.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.Build;
+import io.onedev.server.util.ProjectScope;
+
+public class WaitingCriteria extends StatusCriteria {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<Build, Build> from, CriteriaBuilder builder) {
+		Path<?> attribute = from.get(Build.PROP_STATUS);
+		return builder.equal(attribute, Build.Status.WAITING);
+	}
+
+	@Override
+	public boolean matches(Build build) {
+		return build.getStatus() == Build.Status.WAITING;
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return BuildQuery.getRuleName(BuildQueryLexer.Waiting);
+	}
+
+	@Override
+	public Build.Status getStatus() {
+		return Build.Status.WAITING;
+	}
+
+}

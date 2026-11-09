@@ -1,0 +1,13 @@
+<wicket:extend>
+    <ul wicket:id="tabs" class="tabs nav nav-tabs nav-tabs-line nav-tabs-line-3x mb-5"></ul>
+    <div wicket:id="tabContent"></div>
+    <wicket:fragment wicket:id="tabContentFrag">
+        <form wicket:id="form">
+            <div wicket:id="editor"></div>
+            <div class="simple-actions">
+                <input class="btn btn-primary" t:value="Ok" type="submit">
+                <a wicket:id="cancel" class="btn simple-cancel">Cancel</a>
+            </div>
+        </form>    
+    </wicket:fragment>
+</wicket:extend>

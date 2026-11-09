@@ -1,0 +1,92 @@
+package io.onedev.server.buildspec.step;
+
+import static io.onedev.commons.utils.FileUtils.hasSymbolLinks;
+
+import java.io.File;
+import java.io.Serial;
+import java.util.List;
+
+import jakarta.validation.constraints.NotEmpty;
+
+import io.onedev.commons.codeassist.InputSuggestion;
+import io.onedev.commons.utils.ExplicitException;
+import io.onedev.k8shelper.ExecuteCondition;
+import io.onedev.server.annotation.Editable;
+import io.onedev.server.annotation.Interpolative;
+import io.onedev.server.annotation.Path;
+import io.onedev.server.annotation.PathSegment;
+import io.onedev.server.annotation.Patterns;
+import io.onedev.server.buildspec.BuildSpec;
+import io.onedev.server.util.patternset.PatternSet;
+import io.onedev.server.validation.validator.PathValidator;
+
+@Editable
+public abstract class PublishReportStep extends ServerSideStep {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+	
+	private String reportName;
+	
+	private String filePatterns;
+	
+	private transient PatternSet patternSet;
+
+	@Editable(order=50, description="Specify name of the report to be displayed in build detail page")
+	@PathSegment
+	@NotEmpty
+	public String getReportName() {
+		return reportName;
+	}
+
+	public void setReportName(String reportName) {
+		this.reportName = reportName;
+	}
+	
+	public PublishReportStep() {
+		setCondition(ExecuteCondition.ALWAYS);
+	}
+	
+	@Override
+	protected PatternSet getFiles() {
+		return PatternSet.parse(getFilePatterns());
+	}
+	
+	@Editable(order=100, description="Specify files relative to <a href='${docsite}/concepts#job-workdir'>job working directory</a> to be published. "
+			+ "Use * or ? for pattern match")
+	@Interpolative(variableSuggester="suggestVariables")
+	@Patterns(path=true)
+	@NotEmpty
+	public String getFilePatterns() {
+		return filePatterns;
+	}
+
+	public void setFilePatterns(String filePatterns) {
+		this.filePatterns = filePatterns;
+	}
+	
+	@SuppressWarnings("unused")
+	private static List<InputSuggestion> suggestVariables(String matchWith) {
+		return BuildSpec.suggestVariables(matchWith, true, true, false);
+	}
+
+	public PatternSet getPatternSet() {
+		if (patternSet == null)
+			patternSet = PatternSet.parse(getFilePatterns());
+		return patternSet;
+	}
+
+	/**
+	 * Validate the interpolated path before accessing a report file directly.
+	 */
+	protected File getReportFile(File inputDir, String filePath) {
+		var error = PathValidator.checkPath(Path.Type.RELATIVE, filePath);
+		if (error != null)
+			throw new ExplicitException("Invalid report file path '" + filePath + "': " + error);
+		var file = new File(inputDir, filePath);
+		if (hasSymbolLinks(inputDir, file))
+			throw new ExplicitException("Report file path must not contain symbolic links: " + filePath);
+		return file;
+	}
+	
+}

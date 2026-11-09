@@ -1,0 +1,51 @@
+package io.onedev.server.search.entity.agent;
+
+import java.io.Serial;
+
+import org.jspecify.annotations.Nullable;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+
+import io.onedev.server.model.Agent;
+import io.onedev.server.model.Build;
+import io.onedev.server.util.ProjectScope;
+import io.onedev.server.util.QueryUtils;
+import io.onedev.server.util.criteria.Criteria;
+
+public class RanBuildCriteria extends Criteria<Agent> {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private final Build build;
+	
+	private final String value;
+	
+	public RanBuildCriteria(String value) {
+		build = QueryUtils.getBuild(null, value);
+		this.value = value;
+	}
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<Agent, Agent> from, CriteriaBuilder builder) {
+		Join<?, ?> join = from.join(Agent.PROP_BUILDS, JoinType.LEFT);
+		join.on(builder.equal(join, build));
+		return join.isNotNull();
+	}
+
+	@Override
+	public boolean matches(Agent agent) {
+		return build.getAgent().equals(agent);
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return AgentQuery.getRuleName(AgentQueryLexer.RanBuild) + " " 
+				+ quote(value);
+	}
+	
+}

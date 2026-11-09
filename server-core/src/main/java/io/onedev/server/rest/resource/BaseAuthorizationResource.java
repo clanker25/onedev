@@ -1,0 +1,71 @@
+package io.onedev.server.rest.resource;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.validation.constraints.NotNull;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
+import io.onedev.server.data.migration.VersionedXmlDoc;
+import io.onedev.server.service.AuditService;
+import io.onedev.server.service.BaseAuthorizationService;
+import io.onedev.server.model.BaseAuthorization;
+import io.onedev.server.rest.annotation.Api;
+import io.onedev.server.rest.RestProjectUtils;
+
+@Api(description = "This resource manages default roles of project")
+@Path("/base-authorizations")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@Singleton
+public class BaseAuthorizationResource {
+
+	private final BaseAuthorizationService authorizationService;
+
+	private final AuditService auditService;
+
+	@Inject
+	public BaseAuthorizationResource(BaseAuthorizationService authorizationService, AuditService auditService) {
+		this.authorizationService = authorizationService;
+		this.auditService = auditService;
+	}
+
+	@Api(order=100, description = "Get base authorization of specified id")
+	@Path("/{authorizationId}")
+	@GET
+	public BaseAuthorization getAuthorization(@PathParam("authorizationId") Long authorizationId) {
+		var authorization = authorizationService.load(authorizationId);
+		RestProjectUtils.checkAuthorizationPermission(authorization.getProject());
+		return authorization;
+	}
+	
+	@Api(order=200, description="Create base authorization")
+	@POST
+	public Long createAuthorization(@NotNull BaseAuthorization authorization) {
+		RestProjectUtils.checkAuthorizationPermission(authorization.getProject());
+		authorizationService.create(authorization);
+		var newAuditContent = VersionedXmlDoc.fromBean(authorization).toXML();
+		auditService.audit(authorization.getProject(), "created base authorization via RESTful API", null, newAuditContent);
+		return authorization.getId();
+	}
+
+	@Api(order=300, description = "Delete base authorization of specified id")
+	@Path("/{authorizationId}")
+	@DELETE
+	public Response deleteAuthorization(@PathParam("authorizationId") Long authorizationId) {
+		var authorization = authorizationService.load(authorizationId);
+		RestProjectUtils.checkAuthorizationPermission(authorization.getProject());
+		authorizationService.delete(authorization);
+		var oldAuditContent = VersionedXmlDoc.fromBean(authorization).toXML();
+		auditService.audit(authorization.getProject(), "deleted base authorization via RESTful API", oldAuditContent, null);
+		return Response.ok().build();
+	}
+	
+}
