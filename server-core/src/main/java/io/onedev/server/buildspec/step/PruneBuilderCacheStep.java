@@ -1,0 +1,49 @@
+package io.onedev.server.buildspec.step;
+
+import static io.onedev.server.buildspec.step.StepGroup.DOCKER_IMAGE;
+
+import java.io.Serial;
+
+import io.onedev.k8shelper.PruneBuilderCacheFacade;
+import io.onedev.k8shelper.StepFacade;
+import io.onedev.server.annotation.Editable;
+import io.onedev.server.annotation.ReservedOptions;
+import io.onedev.server.buildspec.param.ParamCombination;
+import io.onedev.server.model.Build;
+import io.onedev.server.model.support.administration.DockerAware;
+import io.onedev.server.model.support.administration.jobexecutor.JobExecutor;
+import io.onedev.server.model.support.administration.jobexecutor.KubernetesAware;
+import io.onedev.server.model.support.administration.jobexecutor.SandboxAware;
+
+@Editable(order=260, name="Prune Builder Cache", group = DOCKER_IMAGE, description="" +
+		"Prune image cache of docker buildx builder. This step calls docker buildx prune command " +
+		"to remove cache of the builder used by the Docker or sandbox executor")
+public class PruneBuilderCacheStep extends Step {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+	
+	private String options;
+
+	@Editable(order=100, description = "Optionally specify options for docker buildx prune command")
+	@ReservedOptions({"-f", "--force", "(-f|--force)=.*", "--builder", "(--builder)=.*"})
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	@Override
+	public StepFacade getFacade(Build build, JobExecutor jobExecutor, String jobToken, ParamCombination paramCombination) {
+		return new PruneBuilderCacheFacade(getOptions());
+	}
+	
+	@Override
+	public boolean isApplicable(Build build, JobExecutor executor) {
+		return executor instanceof SandboxAware
+				|| executor instanceof DockerAware && !(executor instanceof KubernetesAware);
+	}
+
+}

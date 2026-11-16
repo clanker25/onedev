@@ -1,0 +1,90 @@
+package io.onedev.server.model;
+
+import java.io.Serial;
+import java.util.Date;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import io.onedev.server.model.support.issue.changedata.IssueChangeData;
+
+@Entity
+@Table(indexes={
+		@Index(columnList="issue_id"), @Index(columnList="user_id")})
+public class IssueChange extends AbstractEntity {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	public static final String PROP_ISSUE = "issue";
+
+	public static final String PROP_USER = "user";
+
+	public static final String PROP_DATE = "date";
+
+	@ManyToOne
+	@JoinColumn(nullable=false)
+	private Issue issue;
+	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(nullable=false)
+	private User user;
+	
+	@Column(nullable=false)
+	private Date date = new Date();
+	
+	@Lob
+	@Column(length=1048576, nullable=false)
+	private IssueChangeData data;
+
+	public Issue getIssue() {
+		return issue;
+	}
+
+	public void setIssue(Issue issue) {
+		this.issue = issue;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
+
+	public IssueChangeData getData() {
+		return data;
+	}
+
+	public void setData(IssueChangeData data) {
+		this.data = data;
+	}
+
+	public String getAnchor() {
+		return getClass().getSimpleName() + "-" + getId();
+	}
+	
+	public boolean affectsBoards() {
+		return data.affectsListing();
+	}
+
+	public boolean isMinor() {
+		return getData().isMinor();
+	}
+	
+}

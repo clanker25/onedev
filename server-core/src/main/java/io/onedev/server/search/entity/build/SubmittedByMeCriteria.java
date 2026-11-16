@@ -1,0 +1,54 @@
+package io.onedev.server.search.entity.build;
+
+import static io.onedev.server.web.translation.Translation._T;
+
+import java.io.Serial;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+
+import org.jspecify.annotations.Nullable;
+
+import io.onedev.server.exception.NotAcceptableException;
+import io.onedev.server.model.Build;
+import io.onedev.server.model.User;
+import io.onedev.server.security.SecurityUtils;
+import io.onedev.server.util.ProjectScope;
+
+public class SubmittedByMeCriteria extends SubmittedByCriteria {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<Build, Build> from, CriteriaBuilder builder) {
+		if (User.get() != null) {
+			Path<User> attribute = from.get(Build.PROP_SUBMITTER);
+			return builder.equal(attribute, User.get());
+		} else {
+			throw new NotAcceptableException(_T("Please login to perform this query"));
+		}
+	}
+
+	@Override
+	public User getUser() {
+		return SecurityUtils.getUser();
+	}
+
+	@Override
+	public boolean matches(Build build) {
+		if (User.get() != null)
+			return User.get().equals(build.getSubmitter());
+		else
+			throw new NotAcceptableException(_T("Please login to perform this query"));
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return BuildQuery.getRuleName(BuildQueryLexer.SubmittedByMe);
+	}
+
+}

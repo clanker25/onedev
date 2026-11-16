@@ -1,0 +1,41 @@
+package io.onedev.server.search.buildmetric;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
+import io.onedev.commons.utils.StringUtils;
+
+public abstract class BuildMetricCriteria implements Serializable {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private boolean withParens;
+	
+	public BuildMetricCriteria withParens(boolean withParens) {
+		this.withParens = withParens;
+		return this;
+	}
+
+	public abstract Predicate getPredicate(Root<?> metrixRoot, Join<?, ?> buildJoin, CriteriaBuilder builder);
+	
+	public static String quote(String value) {
+		return "\"" + StringUtils.escape(value, "\"") + "\"";
+	}
+
+	@Override
+	public String toString() {
+		if (withParens)
+			return "(" + toStringWithoutParens() + ")";
+		else
+			return toStringWithoutParens();
+	}
+	
+	public abstract String toStringWithoutParens();
+	
+}

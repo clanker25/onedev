@@ -1,0 +1,33 @@
+package io.onedev.server.util.usermatch;
+
+import java.io.Serial;
+
+import io.onedev.commons.utils.StringUtils;
+import io.onedev.server.model.User;
+
+public class UserCriteria implements UserMatchCriteria {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+	
+	private final User user;
+
+	public UserCriteria(User user) {
+		this.user = user;
+	}
+	
+	public User getUser() {
+		return user;
+	}
+
+	@Override
+	public boolean matches(User user) {
+		return this.user.equals(user);
+	}
+
+	@Override
+	public String toString() {
+		return "user(" + StringUtils.escape(user.getName(), "()") + ")";
+	}
+	
+}

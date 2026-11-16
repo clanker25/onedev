@@ -1,0 +1,29 @@
+package io.onedev.server.web.editable.buildspec.job.postbuildaction;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+import jakarta.validation.constraints.NotNull;
+
+import io.onedev.server.buildspec.job.action.PostBuildAction;
+import io.onedev.server.annotation.Editable;
+
+@Editable
+public class PostBuildActionBean implements Serializable {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	private PostBuildAction action;
+
+	@Editable(order=100, name="Type")
+	@NotNull(message="may not be empty")
+	public PostBuildAction getAction() {
+		return action;
+	}
+
+	public void setAction(PostBuildAction action) {
+		this.action = action;
+	}
+
+}

@@ -1,0 +1,53 @@
+package io.onedev.server.search.entity.pullrequest;
+
+import static io.onedev.server.search.entity.pullrequest.PullRequestQueryLexer.WatchedByMe;
+import static io.onedev.server.web.translation.Translation._T;
+
+import java.io.Serial;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Predicate;
+
+import org.jspecify.annotations.Nullable;
+
+import io.onedev.server.exception.NotAcceptableException;
+import io.onedev.server.model.PullRequest;
+import io.onedev.server.model.User;
+import io.onedev.server.util.ProjectScope;
+import io.onedev.server.util.criteria.Criteria;
+
+public class WatchedByMeCriteria extends Criteria<PullRequest> {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public Predicate getPredicate(@Nullable ProjectScope projectScope, CriteriaQuery<?> query, From<PullRequest, PullRequest> from, CriteriaBuilder builder) {
+		var user = User.get();
+		if (user != null) 
+			return getCriteria(user).getPredicate(projectScope, query, from, builder);
+		else 
+			throw new NotAcceptableException(_T("Please login to perform this query"));
+	}
+
+	@Override
+	public boolean matches(PullRequest request) {
+		var user = User.get();
+		if (user != null)
+			return getCriteria(user).matches(request);
+		else
+			throw new NotAcceptableException(_T("Please login to perform this query"));
+	}
+	
+	private Criteria<PullRequest> getCriteria(User user) {
+		return new WatchedByUserCriteria(user);
+	}
+
+	@Override
+	public String toStringWithoutParens() {
+		return PullRequestQuery.getRuleName(WatchedByMe);
+	}
+
+}
