@@ -1,0 +1,17 @@
+<wicket:extend>
+	<div class="card">
+		<div class="card-body">
+			<div class="alert alert-notice alert-light">
+				<wicket:t>
+				Choose a fast, cost-effective model for lightweight tasks such as interpreting natural language queries,
+				generating branch names from issue titles, and suggesting titles and descriptions for pull requests
+				that contain multiple commits.
+				</wicket:t>
+			</div>
+			<form wicket:id="form" class="leave-confirm">
+				<div wicket:id="editor" class="mb-4"></div>
+				<input type="submit" class="btn btn-primary dirty-aware" t:value="Save Settings">
+			</form>
+		</div>
+	</div>
+</wicket:extend>

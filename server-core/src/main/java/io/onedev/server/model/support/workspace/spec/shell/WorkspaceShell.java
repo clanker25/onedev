@@ -1,0 +1,78 @@
+package io.onedev.server.model.support.workspace.spec.shell;
+
+import static io.onedev.k8shelper.WorkspaceHelper.TASK_SCRIPT_NAME;
+import static io.onedev.server.web.translation.Translation._T;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.List;
+
+import io.onedev.commons.codeassist.InputSuggestion;
+import io.onedev.k8shelper.ShellFacility;
+import io.onedev.server.annotation.Editable;
+import io.onedev.server.web.util.SuggestionUtils;
+
+@Editable
+public abstract class WorkspaceShell implements Serializable {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	protected static final String CHECK_TOD_VERSION_COMMAND = "tod check-version";
+
+	
+	private String setupCommands;
+
+	private String teardownCommands;
+	
+	public String getSetupCommands() {
+		return setupCommands;
+	}
+
+	public void setSetupCommands(String setupCommands) {
+		this.setupCommands = setupCommands;
+	}
+
+	public String getTeardownCommands() {
+		return teardownCommands;
+	}
+
+	public void setTeardownCommands(String teardownCommands) {
+		this.teardownCommands = teardownCommands;
+	}
+
+	public abstract ShellFacility getFacility();
+
+	protected String getTaskScriptName() {
+		return TASK_SCRIPT_NAME + getFacility().getScriptExtension();
+	}
+
+	public abstract String createTaskCommands(String command, String systemPrompt, String userPrompt,
+											  String successMarker, String failureMarker);
+
+	public abstract String getRunPromptLauncher(String failureMarker);
+
+	protected String getCombinedTaskPrompt(String systemPrompt, String userPrompt) {
+		return ("### Rules\n" + systemPrompt + "\n\n### User\n" + userPrompt).trim();
+	}
+
+	protected static List<InputSuggestion> suggestVariables(String matchWith) {
+		return SuggestionUtils.suggestWorkspaceVariables(matchWith);
+	}
+
+	protected static String getSetupCommandDescription() {
+		return _T("""
+			Optionally specify shell commands to run to set up the workspace. These commands will 
+			run from working directory holding cloned repository files. It runs after cache and 
+			user data restored and config files generated""");
+	}
+
+	protected static String getTeardownCommandDescription() {
+		return _T("""
+			Optionally specify shell commands to run to tear down the workspace. These commands will 
+			run from working directory holding cloned repository files when the workspace is being 
+			stopped, before cache and user data are uploaded. Failure of these commands will be 
+			logged without affecting the upload""");
+	}
+	
+}

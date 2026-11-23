@@ -1,0 +1,37 @@
+package io.onedev.server.model;
+
+import static io.onedev.server.model.ProjectLastActivityDate.PROP_VALUE;
+
+import java.io.Serial;
+import java.util.Date;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
+/**
+ * Maintain high dynamic data in a separate table to avoid project second-level 
+ * cache being invalidated frequently
+ */
+@Entity
+@Table(indexes={@Index(columnList= PROP_VALUE)})
+public class ProjectLastActivityDate extends AbstractEntity {
+
+	@Serial
+	private static final long serialVersionUID = 1L;
+
+	public static final String PROP_VALUE = "value";
+	
+	@Column(nullable=false)
+	private Date value = new Date();
+
+	public Date getValue() {
+		return value;
+	}
+
+	public void setValue(Date value) {
+		this.value = value;
+	}
+	
+}

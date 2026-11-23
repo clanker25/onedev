@@ -1,0 +1,27 @@
+.comment-indicator, .comment-trigger {
+	color: var(--gray) !important;
+}
+.dark-mode .comment-indicator, .dark-mode .comment-trigger {
+	color: var(--dark-mode-gray) !important;
+}
+.comment-indicator:hover, .comment-indicator.active,
+.comment-trigger:hover, .comment-trigger.active {
+	color: var(--primary) !important;
+}
+.comment-indicator.updated, .comment-trigger.updated {
+	position: relative;
+}
+.comment-indicator.updated::after, .comment-trigger.updated::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: -2px;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background-color: var(--primary);
+}
+.popover-body>.comment-trigger {
+	display: block;
+	white-space: nowrap;
+}
